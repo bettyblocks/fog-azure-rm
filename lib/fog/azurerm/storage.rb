@@ -77,7 +77,7 @@ module Fog
         def initialize(_options = {})
           begin
             require 'azure_mgmt_storage'
-            require 'azure/storage'
+            require 'azure/storage/common'
           rescue LoadError => e
             retry if require('rubygems')
             raise e.message
@@ -90,7 +90,8 @@ module Fog
         def initialize(options)
           begin
             require 'azure_mgmt_storage'
-            require 'azure/storage'
+            require 'azure/storage/common'
+            require 'azure/storage/blob'
             require 'securerandom'
             require 'vhd'
             @debug = ENV['DEBUG'] || options[:debug]
@@ -122,13 +123,13 @@ module Fog
           @azure_storage_account_name = options[:azure_storage_account_name]
           @azure_storage_access_key = options[:azure_storage_access_key]
 
-          azure_client = Azure::Storage::Client.create(storage_account_name: @azure_storage_account_name,
+          common_client = Azure::Storage::Common::Client.create(storage_account_name: @azure_storage_account_name,
                                                        storage_access_key: @azure_storage_access_key)
-          azure_client.storage_blob_host = get_blob_endpoint(@azure_storage_account_name, true, @environment)
-          @blob_client = azure_client.blob_client
-          @blob_client.with_filter(Azure::Storage::Core::Filter::ExponentialRetryPolicyFilter.new)
+          common_client.storage_blob_host = get_blob_endpoint(@azure_storage_account_name, true, @environment)
+          @blob_client = Azure::Storage::Blob::BlobService.new(client: common_client)
+          @blob_client.with_filter(Azure::Storage::Common::Core::Filter::ExponentialRetryPolicyFilter.new)
           @blob_client.with_filter(Azure::Core::Http::DebugFilter.new) if @debug
-          @signature_client = Azure::Storage::Core::Auth::SharedAccessSignature.new(@azure_storage_account_name,
+          @signature_client = Azure::Storage::Common::Core::Auth::SharedAccessSignature.new(@azure_storage_account_name,
                                                                                     @azure_storage_access_key)
         end
       end
