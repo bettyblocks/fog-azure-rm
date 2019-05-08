@@ -12,6 +12,7 @@ module Fog
       # Recognizes when creating data client
       recognizes :azure_storage_account_name
       recognizes :azure_storage_access_key
+      recognizes :azure_storage_sas_token
       recognizes :debug
 
       request_path 'fog/azurerm/requests/storage'
