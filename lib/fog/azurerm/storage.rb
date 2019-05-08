@@ -122,9 +122,20 @@ module Fog
 
           @azure_storage_account_name = options[:azure_storage_account_name]
           @azure_storage_access_key = options[:azure_storage_access_key]
+          @azure_storage_sas_token = options[:azure_storage_sas_token]
 
-          common_client = Azure::Storage::Common::Client.create(storage_account_name: @azure_storage_account_name,
-                                                       storage_access_key: @azure_storage_access_key)
+          if @azure_storage_sas_token.nil?
+            client_options = {
+              storage_account_name: @azure_storage_account_name,
+              storage_access_key: @azure_storage_access_key
+            }
+          else
+            client_options = {
+              storage_account_name: @azure_storage_account_name,
+              storage_sas_token: @azure_storage_sas_token
+            }
+          end
+          common_client = Azure::Storage::Common::Client.create(client_options)
           common_client.storage_blob_host = get_blob_endpoint(@azure_storage_account_name, true, @environment)
           @blob_client = Azure::Storage::Blob::BlobService.new(client: common_client)
           @blob_client.with_filter(Azure::Storage::Common::Core::Filter::ExponentialRetryPolicyFilter.new)
